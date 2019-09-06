@@ -99,17 +99,26 @@ service-worker: true
 # Friends
 friends: [
     {
-        title: "WY",
-        href: "http://zhengwuyang.com"
+        title: "鳥哥的 Linux 私房菜",
+        href: "http://linux.vbird.org/"
     },{
-        title: "简书·BY",
-        href: "http://www.jianshu.com/u/e71990ada2fd"
+        title: "qiujuer",
+        href: "http://www.qiujuer.net/Works"
     },{
-        title: "Apple",
-        href: "https://apple.com"
+        title: "胡凯",
+        href: "http://hukai.me/"
     },{
-        title: "Apple Developer",
-        href: "https://developer.apple.com/"
+        title: "Piasy",
+        href: "https://blog.piasy.com/"
+    },{
+        title: "Gityuan",
+        href: "http://gityuan.com/"
+    },{
+        title: "ctf wiki",
+        href: "https://ctf-wiki.github.io/ctf-wiki/"
+    },{
+        title: "Daniel-0",
+        href: "https://blog.csdn.net/D_pokemon"
     }
 ]
 
