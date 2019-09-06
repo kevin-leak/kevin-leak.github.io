@@ -1,12 +1,12 @@
 ---
-layout:     post                    # 使用的布局（不需要改）
-title:      c 与 java       # 标题 
-subtitle:  	基础数据类型对比与c内存分配  #副标题
-date:       2019-09-05              # 时间
+layout:     post                    	# 使用的布局（不需要改）
+title:      Data type and Layout-      			# 标题 
+subtitle:  	基础数据类型对比与c内存分配  	# 副标题
+date:       2019-09-06              	# 时间
 author:     kevin-leak                      # 作者
 header-img: img/post/c_c++/bg-2019-06.jpg   #这篇文章标题背景图片
-catalog: true                       # 是否归档
-tags:                               #标签
+catalog: true                       		# 是否归档
+tags:                               		#标签
     - c
 	- c++
 	- java
