@@ -119,7 +119,29 @@ friends: [
     },{
         title: "Daniel-0",
         href: "https://blog.csdn.net/D_pokemon"
+    },{
+        title: "鸿洋",
+        href: "https://blog.csdn.net/lmj623565791/"
+    },{
+        title: "老罗",
+        href: "https://blog.csdn.net/Luoshengyang"
+    },{
+        title: "郭霖",
+        href: "https://blog.csdn.net/guolin_blog"
+    },{
+        title: "Android 最新学习资料收集",
+        href: "https://github.com/kevin-leak/AndroidMaterialLatest"
+    },{
+        title: "Android学习资源网站索引大全",
+        href: "https://github.com/zhujun2730/Android-Learning-Resources"
+    },{
+        title: "Android Interview",
+        href: "http://www.jackywang.tech/AndroidInterview-Q-A/interview/"
+    },{
+        title: "Android 校招指南",
+        href: "http://www.jackywang.tech/AndroidInterview-Q-A/interview/"
     }
+
 ]
 
 theme: jekyll-theme-cayman
