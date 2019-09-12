@@ -70,7 +70,86 @@ ContentResolve 、 ContentProvider，Binder
 
 
 
+<span style="background-color: #F9B6E5; padding:0px 3px; margin:2px; border-radius:3px ">数据源</span> 
+
+数据源比较多，凡是可以存储的，都是数据源。
+
+这里需要注意的是SQlite
+
+```java
+public class kevinDBHelper extends SQLiteOpenHelper {
+    public kevinDBHelper(Context context) {
+        super(context, name, null, version);
+    }
+    @Override
+    public void onCreate(SQLiteDatabase db) {}
+    @Override
+    public void onOpen(SQLiteDatabase db) { super.onOpen(db); }
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {}
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        super.onDowngrade(db, oldVersion, newVersion);
+    }
+    @Override
+    public void onConfigure(SQLiteDatabase db) { super.onConfigure(db); }
+}
+```
+
+**具体的使用**
+
+```java
+// 通过数据库助手创建数据库，并为实际创建，只是记录了参数
+mDbHelper = new kevinDBHelper(getContext());
+// 拿到数据的句柄进行操作，这里进行了实际创建，同时调用了open方法
+db = mDbHelper.getWritableDatabase();
+```
+
+- 对象的创建：设置数据库的名字、版本
+
+- onCreate：只会执行一次，一般用来创建表项
+
+- open：但打开数据库进行数据操作的时候使用
+
+- onConfigure：数据库配置发生改变的回调，比如取消外键约束
+
+- onUpgrade，onDowngrade：版本的升级与降级
+
+  特别需要注意的是：<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">假如客户处于不同版本的数据库，但都要更新到最新的数据库，如何操作？</span> 
+
+  个人想法是：可以按编号进行更新的存储，根据当前版本和最新版本遍历进行更新或者回退操作。
+
+
+
 ### 具体使用
+
+分为两部分来写，一个是进程内和进程外，采用的数据源是：SQLite
+
+通用的数据源：
+
+
+
+
+
+
+
+### 源码分析
+
+
+
+#### ContentProvider与ContentResolve
+
+
+
+
+
+#### SQLitehelper
+
+
+
+
+
+
 
 
 
