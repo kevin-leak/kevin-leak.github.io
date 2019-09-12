@@ -22,29 +22,13 @@ tags:                               #标签
 
 
 
-### 原理
+### 原理介绍
 
-<img src="../img/post/android/picture/contentProvider_theory.png" />
-
-
-
-### 作用
-
-contentProvider 的作用是为应用提供不同数据的接口，用过contentProvider统一获取资源。
+<img src="https://www.crabglory.club/img/post/android/picture/contentProvider_theory.png" />
 
 
 
-
-
-### 使用
-
-URL：contentProvider 用来处理资源定位
-
-ContentUris：解析URI中的id
-
-UriMatcher：根据自己设定的URI，来匹配客户端发来的URI
-
-
+主要是两个主类：ContentResolve 和 ContentProvider
 
 
 
