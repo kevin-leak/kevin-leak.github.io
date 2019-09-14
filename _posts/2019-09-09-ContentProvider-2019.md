@@ -24,7 +24,7 @@ tags:                               #标签
 
 ### 原理介绍
 
-<img src="https://www.crabglory.club/img/post/android/picture/contentProvider_theory.png" />
+<img src="https://www.crabglory.club/img/post/android/picture/contentProvider_theory.png" width="600px"/>
 
 ContentResolve 可以通过Context中利用getContentResolve()获取；
 
@@ -50,7 +50,7 @@ ContentResolve 、 ContentProvider，Binder
 
 - URI：资源定位符
 
-  <img src="../img/post/android/mind/URI.png" width="500px"/> 
+  <img src="https://www.crabglory.club/img/post/android/mind/URI.png" width="500px"/> 
 
 - ContentValue：复写了大量的put(key, value)方法，用来储存数据
 
