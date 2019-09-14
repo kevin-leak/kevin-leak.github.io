@@ -49,7 +49,11 @@ ContentResolve 、 ContentProvider，Binder
 <span style="background-color: #F9B6E5; padding:0px 3px; margin:2px; border-radius:3px ">通信参数</span> 
 
 - URI：资源定位符
+
+  <img src="../img/post/android/mind/URI.png" width="500px"/> 
+
 - ContentValue：复写了大量的put(key, value)方法，用来储存数据
+
 - Selection：选择数据的哪一行
 
 
@@ -125,25 +129,236 @@ db = mDbHelper.getWritableDatabase();
 
 分为两部分来写，一个是进程内和进程外，采用的数据源是：SQLite
 
-通用的数据源：
+<span style="background-color: #FFD39B; padding:0px 3px; margin:2px; border-radius:3px ">通用的数据源</span> 
+
+```java
+public class kevinDBHelper extends SQLiteOpenHelper {
+
+    private static final String name = "KEVIN_DB";
+    private static final int version = 1;
+    private static final String USER_TABLE_NAME = "USER_TABLE_NAME";
+    private static final String JOB_TABLE_NAME = "JOB_TABLE_NAME";
+
+    public kevinDBHelper(Context context) {super(context, name, null, version);}
+    
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS " 
+                   + USER_TABLE_NAME 
+                   + "(_id INTEGER PRIMARY KEY AUTOINCREMENT," + " name TEXT)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS " 
+                   + JOB_TABLE_NAME 
+                   + "(_id INTEGER PRIMARY KEY AUTOINCREMENT," + " job TEXT)");
+    }
+    
+    @Override
+    public void onOpen(SQLiteDatabase db) {super.onOpen(db);}
+    @Override
+    public void onConfigure(SQLiteDatabase db) {super.onConfigure(db);}
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {}
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        super.onDowngrade(db, oldVersion, newVersion);
+    }
+
+}
+```
+
+<span style="background-color: #FFD39B; padding:0px 3px; margin:2px; border-radius:3px ">客户端</span> 
+
+**MainActivity.java**
+
+```java
+public class MainActivity extends AppCompatActivity {
+
+    private Uri uri;
+    private ContentResolver contentResolver;
+    private com.example.kevinleak.codestudy.kevinObserver kevinObserver;
+    private Handler handler;
+
+    @SuppressLint("HandlerLeak")
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        initResolver();
+        dealData();
+    }
+        /**
+     * 增删查改
+     */
+    private void dealData() {
+        uri = Uri.parse("content://www.crabglory.club/User");
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("name", "kk");
+        // 插入位置，插入的项与值
+        contentResolver.insert(uri, contentValues);
+        // uri指定表，"id > 1" 说明那个表
+        contentResolver.delete(uri, "id > 1", null);
+        // 指定表，指定查的列集
+        contentResolver.query(uri, new String[]{"_id","name"}, null,
+                              null, ContentResolver.QUERY_ARG_SQL_SORT_ORDER);
+        contentResolver.update(uri, contentValues, "id > 1", null);
+    }
+
+    
+    @SuppressLint("HandlerLeak")
+    private void initResolver() {
+        uri = Uri.parse("content://www.crabglory.club/User/1");
+        contentResolver = getContentResolver();
+        handler = new Handler(){
+            @Override
+            public void handleMessage(Message msg) {
+                // 此处用来observer与Activity的通信
+            }
+        };
+        kevinObserver = new kevinObserver(handler);
+        contentResolver.registerContentObserver(uri, true, kevinObserver);
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        getContentResolver().unregisterContentObserver(kevinObserver);
+    }
+}
+```
+
+**kevinObserver.java**
+
+```java
+public class kevinObserver extends ContentObserver {
+    public kevinObserver(Handler handler) {
+        super(handler);
+    }
+    @Override
+    public void onChange(boolean selfChange) {
+        // 收到服务端的改变消息，进行复写父类的方法
+    }
+}
+```
+
+<span style="background-color: #FFD39B; padding:0px 3px; margin:2px; border-radius:3px ">数据端</span> 
+
+涉及到不同的类型，同一个进程，不同的进程
+
+用xml注册来区别：
+
+可以设置contentProvider的权限：
+
+以普通的来说
+
+```xml
+<provider
+          android:name=".kevinProvider"
+          android:authorities="www.crabglory.club"
+          android:enabled="true" 
+          // 读写权限设置为私密
+          android:permission="www.crabglory.PROVIDER"  
+          // 细分
+          android:readPermisson = "www.crabglory.Read"
+          android:writePermisson = "www.crabglory.Write"
+          />
+```
+
+如果需要获取相关权限，则需要添加
+
+```xml
+<permission android:name="www.crabglory.Read" android:protectionLevel="normal"/>
+<permission android:name="www.crabglory.Write" android:protectionLevel="normal"/>
+
+<permission android:name="www.crabglory.PROVIDER" android:protectionLevel="normal"/>
+```
+
+<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">进程内通信清单文件</span> 
+
+```xml
+<provider
+          android:name=".kevinProvider"
+          android:authorities="www.crabglory.club"
+          android:enabled="true" />
+```
+
+<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">跨进程清单文件</span> 
+
+```xml
+<provider
+          android:name=".kevinProvider"
+          android:authorities="www.crabglory.club"
+          android:enabled="true" 
+          <!--这里设置可以外放-->
+          android:exported="true"/>
+```
+
+<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">ContentProvider</span> 
+
+```java
+public class kevinProvider extends ContentProvider {
+
+    private com.example.kevinleak.codestudy.kevinDBHelper kevinDBHelper;
+    private SQLiteDatabase db;
+
+    public kevinProvider() { }
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) { return 0; }
+    @Override
+    public String getType(Uri uri) { return null; }
+    @Override
+    public Uri insert(Uri uri, ContentValues values) { return null; }
+    @Override
+    public boolean onCreate() {
+        kevinDBHelper = new kevinDBHelper(getContext());
+        db = kevinDBHelper.getReadableDatabase();
+        return true;
+    }
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) { return null; }
+    @Override
+    public int update(Uri uri, ContentValues values, String selection,
+                      String[] selectionArgs) { return 0; }
+}
+```
+
+<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">SQLiteOpenHelper</span> 
+
+```java
+public class kevinDBHelper extends SQLiteOpenHelper {
+
+    private static final String name = "KEVIN_DB";
+    private static final int version = 1;
+    private static final String USER_TABLE_NAME = "USER_TABLE_NAME";
+    private static final String JOB_TABLE_NAME = "JOB_TABLE_NAME";
+
+    public kevinDBHelper(Context context) {
+        super(context, name, null, version);
+    }
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + USER_TABLE_NAME 
+                   + "(_id INTEGER PRIMARY KEY AUTOINCREMENT," + " name TEXT)");
+        db.execSQL("CREATE TABLE IF NOT EXISTS " + JOB_TABLE_NAME 
+                   + "(_id INTEGER PRIMARY KEY AUTOINCREMENT," + " job TEXT)");
+    }
+    @Override
+    public void onOpen(SQLiteDatabase db) {
+        super.onOpen(db);
+    }
+    @Override
+    public void onConfigure(SQLiteDatabase db) {
+        super.onConfigure(db);
+    }
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) { }
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        super.onDowngrade(db, oldVersion, newVersion);
+    }
+}
+```
 
 
-
-
-
-
-
-### 源码分析
-
-
-
-#### ContentProvider与ContentResolve
-
-
-
-
-
-#### SQLitehelper
 
 
 
