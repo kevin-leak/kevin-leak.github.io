@@ -18,3 +18,4 @@ tags:                               #标签
 
 
 
+<img src="../img/post/android/mind/Animation.png" />
