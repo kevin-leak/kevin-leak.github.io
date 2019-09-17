@@ -10,12 +10,16 @@ tags:                               #标签
     - android
 ---
 
-**文章结构**
+> 文章结构
+>
+> - 首先要明白有哪些动画场景？
+> - 动画常用的工具介绍
+> - 常见动画的案例
+> - 自定义动画框架
+> - 辅助类：paint、canvas
 
-- 首先要明白有哪些动画场景？
-- 动画常用的工具介绍
-- 常见动画的案例
 
 
 
-<img src="../img/post/android/mind/Animation.png" />
+
+<img src="https://www.crabglory.club//img/post/android/mind/Animation.png" />
