@@ -23,7 +23,7 @@ tags:                               #标签
 动画介绍与使用
 --------------
 
-<img src="../img/post/android/mind/Animation.png" />
+<img src="https://www.crabglory.club/img/post/android/mind/Animation.png" />
 
 动画分为三种：帧动画，View动画，属性动画
 
@@ -59,7 +59,7 @@ backAnimation.start();
 
 主要是看一下AnimationDrawable这个类
 
-<img src="../img/post/android/picture/AnimationDrawable.png" />
+<img src="https://www.crabglory.club/img/post/android/picture/AnimationDrawable.png" />
 
 可以看到基础Drawable抽象类，以及DrawableContiainer，实现了Animatable类
 
@@ -252,21 +252,150 @@ ViewGroup 和 View 中的实现动画，其实都一样，只是统一的设置�
 
 不是容器的View，都是调用requestLayout方法来实现，ViewGroup的实现，其实就是调用子类的requestLayout
 
-#### Activity、Fragment出入动画
+#### Activity出入动画
 
+看下一Activity的使用
+
+```java
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    startActivity(new Intent(MainActivity.this, SecondActivity.class));
+    overridePendingTransition(R.anim.enter, R.anim.out);
+}
+@Override
+public void finish() {
+    super.finish();
+    overridePendingTransition(R.anim.enter, R.anim.out);
+}
 ```
 
+看一下overridePendingTransition的源码，这里做一个猜想，其实进出动画就是在activity生命周期中进行了一个操作。
+
+```java
+public void overridePendingTransition(int enterAnim, int exitAnim) {
+    try {
+        // 发现这里调用了AMS的方法
+        ActivityManager.getService().overridePendingTransition(
+            mToken, getPackageName(), enterAnim, exitAnim);
+    } catch (RemoteException e) {
+    }
+}
 ```
 
+进入AMS中查看overridePendingTransition方法
 
+```java
+@Override
+public void overridePendingTransition(IBinder token, String packageName,
+                                      int enterAnim, int exitAnim) {
+    synchronized(this) {
+        ActivityRecord self = ActivityRecord.isInStackLocked(token);
+        if (self == null) {return;}
+        final long origId = Binder.clearCallingIdentity();
+        if (self.isState(ActivityState.RESUMED, ActivityState.PAUSING)) {
+            mWindowManager.overridePendingAppTransition(packageName,
+                                                        enterAnim, exitAnim, null);
+        }
+        Binder.restoreCallingIdentity(origId);
+    }
+}
+```
 
+查看一下WindowManger中的overridePendingAppTransition
 
+```java
+@Override
+public void overridePendingAppTransition(String packageName,
+                                         int enterAnim, int exitAnim
+                                         , IRemoteCallback startedCallback) {
+    synchronized(mWindowMap) {
+        mAppTransition.overridePendingAppTransition(packageName, enterAnim,
+        exitAnim,startedCallback);
+    }
+}
+```
+
+查看一下AppTranslation
+
+```java
+// 注意这个方法的名字，意思是覆盖acvtivity原来的动画
+void overridePendingAppTransition(String packageName, int enterAnim, int exitAnim,
+                                  IRemoteCallback startedCallback) {
+    if (canOverridePendingAppTransition()) {
+        clear();
+        mNextAppTransitionType = NEXT_TRANSIT_TYPE_CUSTOM;
+        mNextAppTransitionPackage = packageName;
+        mNextAppTransitionEnter = enterAnim;
+        mNextAppTransitionExit = exitAnim;
+        // 注意这里，这里进行了一个回调的处理
+        postAnimationCallback();
+        mNextAppTransitionCallback = startedCallback;
+    }
+}
+```
 
 ### 属性动画
 
+<img src="https://www.crabglory.club/img/post/android/mind/property_Animation.png" height="250px"/>
+
+查看ValuesAnimation的源码，可以了解到
+
+```java
+/* This class provides a simple timing engine for running animations
+* which calculate animated values and set them on target objects.
+*/
+为动画提供时间引擎的类，计算到动画的参数并设置到view对象中
+```
+
+Object是Values的子类，对作用对象进行了封装，同时也对一些使用的参数进行复写
+
+TypeEvalutors：预估计算，TimeInterplator：时间差值器
 
 
 
+#### ObjectAnimation
+
+是对View的各种属性进行动画的设置：
+
+```java
+// 各种覆写
+ObjectAnimator.ofArgb();	
+ObjectAnimator.ofFloat();
+ObjectAnimator.ofMultiFloat();
+ObjectAnimator.ofObject();
+ObjectAnimator.ofPropertyValuesHolder();
+```
+
+第一个参数一般是：View对象，第二个参数是：View的属性
+
+```
+alpha、backgroundColor、translateX、rotation等
+```
+
+[网上找了个例子](https://www.jianshu.com/p/85e407bec8aa)：
+
+```java
+// 三个动画的设置
+ObjectAnimator alphaAnimator = ObjectAnimator.ofFloat(tvAlpha,"alpha",1f,0f,1f);
+ObjectAnimator rotationAnimator = ObjectAnimator.ofFloat(tvAlpha,"rotation",0f,360f);
+ObjectAnimator translateYAnimator =
+    						ObjectAnimator.ofFloat(tvAlpha,"translationY",0f,700f,0f);
+// 设置容器
+AnimatorSet animatorSet = new AnimatorSet();
+// 设置动画的播放的时间：在移动之前播放透明动画的同时播放旋转动画
+animatorSet.play(alphaAnimator).with(rotationAnimator).before(translateYAnimator);
+animatorSet.addListener(new AnimatorListenerAdapter() {
+    @Override
+    public void onAnimationEnd(Animator animation) {
+        Log.e(TAG,"动画结束了");
+    }
+});
+// 统一的设置持续的时间
+animatorSet.setDuration(1000);
+animatorSet.start();
+```
 
 
 
