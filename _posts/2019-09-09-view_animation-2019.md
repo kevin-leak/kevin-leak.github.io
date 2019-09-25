@@ -336,6 +336,8 @@ void overridePendingAppTransition(String packageName, int enterAnim, int exitAni
 }
 ```
 
+
+
 ### 属性动画
 
 <img src="https://www.crabglory.club/img/post/android/mind/property_Animation.png" height="250px"/>
@@ -398,6 +400,95 @@ animatorSet.start();
 ```
 
 
+
+#### TypeEvaluator、TimeInterpolator
+
+这里先看一下张网图：
+
+<img src="../img/post/android/picture/animation_orther.png" height="450px" />
+
+其实就是这样理解：属性动画，一个是时间的变化，一个是空间(属性值)的变化。
+
+我们需要限定时间与属性值的变化范围，确定变化速率，组合属性不同的变化
+
+##### TypeEvaluator
+
+TypeEvaluator：<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">是一个接口类，用来确定当前view的属性，比如颜色、位置</span>
+
+```java
+public interface TypeEvaluator<T> {
+    public T evaluate(float fraction, T startValue, T endValue);
+}
+```
+
+<img src="../img/post/android/picture/TypeEvaluator_hierachy.png" />
+
+看一下子类：
+
+```java
+public class PointFEvaluator implements TypeEvaluator<PointF> {
+    // PointF implements Parcelable
+    // PointF 一个可以被序列化的类，用来记录当前的坐标位置
+    private PointF mPoint;
+    public PointFEvaluator() {}
+    public PointFEvaluator(PointF reuse) {
+        mPoint = reuse;
+    }
+    @Override
+    public PointF evaluate(float fraction, PointF startValue, PointF endValue) {
+        // fraction 是变化的百分比
+        float x = startValue.x + (fraction * (endValue.x - startValue.x));
+        float y = startValue.y + (fraction * (endValue.y - startValue.y));
+        if (mPoint != null) {
+            mPoint.set(x, y);
+            return mPoint;
+        } else {
+            return new PointF(x, y);
+        }
+    }
+}
+
+```
+
+##### TimeInterpolator
+
+TimeInterpolator：<span style="background-color: #C6E2FF; padding:0px 3px; margin:2px; border-radius:3px ">定义了属性值变化的方式，如线性均匀改变，开始慢然后逐渐快等</span> 
+
+看一下相关子类
+
+```java
+AccelerateInterpolator　　　　　   // 加速，开始时慢中间加速
+DecelerateInterpolator　　　 　　  //减速，开始时快然后减速
+AccelerateDecelerateInterolator　 //先加速后减速，开始结束时慢，中间加速
+AnticipateInterpolator　　　　　　  //反向 ，先向相反方向改变一段再加速播放
+ //反向加超越，先向相反方向改变，再加速播放，会超出目的值然后缓慢移动至目的值
+AnticipateOvershootInterpolator
+//跳跃，快到目的值时值会跳跃，如目的值100，后面的值可能依次为85，77，70，80，90，100
+BounceInterpolator
+// 循环，动画循环一定次数，值的改变为一正弦函数：Math.sin(2 * mCycles * Math.PI * input)
+CycleIinterpolator　　　　　　　　  
+LinearInterpolator　　　　　　　　  // 线性，线性均匀改变
+OvershottInterpolator　　　　　　  //超越，最后超出目的值然后缓慢改变到目的值
+TimeInterpolator　　　　　　　　　 // 一个接口，允许你自定义interpolator，以上几个都是实现了这个接口
+```
+
+看一下LinearInterpolator的源码，用来设定速度的匀速变化
+
+```java
+@HasNativeInterpolator
+public class LinearInterpolator extends BaseInterpolator 
+				implements NativeInterpolatorFactory {
+    public LinearInterpolator() {}
+    public LinearInterpolator(Context context, AttributeSet attrs) {}
+    public float getInterpolation(float input) {
+        return input;
+    }
+    @Override
+    public long createNativeInterpolator() {
+        return NativeInterpolatorFactoryHelper.createLinearInterpolator();
+    }
+}
+```
 
 ### 自定义
 
