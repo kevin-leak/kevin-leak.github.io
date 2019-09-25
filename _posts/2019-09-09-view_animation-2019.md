@@ -340,7 +340,7 @@ void overridePendingAppTransition(String packageName, int enterAnim, int exitAni
 
 ### 属性动画
 
-<img src="https://www.crabglory.club/img/post/android/mind/property_Animation.png" height="250px"/>
+<img src="https://www.crabglory.club/img/post/android/mind/property_Animation.png" width="400px"/>
 
 查看ValuesAnimation的源码，可以了解到
 
@@ -405,7 +405,7 @@ animatorSet.start();
 
 这里先看一下张网图：
 
-<img src="../img/post/android/picture/animation_orther.png" height="450px" />
+<img src="https://www.crabglory.club/img/post/android/picture/animation_orther.png" height="450px" />
 
 其实就是这样理解：属性动画，一个是时间的变化，一个是空间(属性值)的变化。
 
@@ -421,7 +421,7 @@ public interface TypeEvaluator<T> {
 }
 ```
 
-<img src="../img/post/android/picture/TypeEvaluator_hierachy.png" />
+<img src="https://www.crabglory.club/img/post/android/picture/TypeEvaluator_hierachy.png" />
 
 看一下子类：
 
