@@ -490,9 +490,9 @@ public class LinearInterpolator extends BaseInterpolator
 }
 ```
 
-### 自定义
+使用
 
-#### 基本动画
-
-#### 动画框架
-
+```java
+Interpolator interpolator = new AccelerateDecelerateInterpolator();
+animation.setInterpolator(interpolator);
+```
