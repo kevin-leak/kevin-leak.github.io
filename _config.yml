@@ -140,8 +140,10 @@ friends: [
     },{
         title: "Android 校招指南",
         href: "http://www.jackywang.tech/AndroidInterview-Q-A/interview/"
+    },{
+        title: "android 面试收集",
+        href: "https://github.com/search?q=android_interview"
     }
-
 ]
 
 theme: jekyll-theme-cayman
