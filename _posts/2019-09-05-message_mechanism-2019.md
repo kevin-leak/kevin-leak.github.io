@@ -1,5 +1,5 @@
 ---
-layout:     post                    # 使用的布局（不需要改）
+handler.sendMessage(message)layout:     post                    # 使用的布局（不需要改）
 title:      handler和AyscTask       # 标题 
 subtitle:   android 异步通信机制分析  #副标题
 date:       2019-09-05              # 时间
@@ -83,6 +83,10 @@ public class MainActivity extends AppCompatActivity {
 
 
 ### handler源码分析
+
+#### 子线程中
+
+##### 源码流程
 
 1. 先从 `handler.sendMessage(message);`这一步开始
 
@@ -174,7 +178,35 @@ public class MainActivity extends AppCompatActivity {
    - <img src="https://www.crabglory.club/img/post/android/mind/msg_set.png" width="300px"/>
    - for循环的操作应该是一个链表的操作，将msg加到链表中，单最后一个指针为空的时候退出或者当前时间小于此时的msg，这里应该是做了一个**时间加权排序**
 
-4. 到这里，Message的添加就完成了，是什么时候反馈消息的？？？什么时候做接收的？？
+
+##### 总结
+
+开辟子线程后，执行
+
+```java
+Message message = Message.obtain();
+message.arg1 = 0;
+message.obj = "here is 0";
+handler.sendMessage(message);
+```
+
+做了两件事：
+
+- Massage中传递了当前的handler
+
+  ```java
+  msg.target = this;
+  ```
+
+- handler.sendMessage(message)，最终调用自己的成员MessageQueue对象，来进行存储
+
+- MessageQueue底层是链表实现，且为同步
+
+#### Handler创建
+
+##### 初始化
+
+1. 到这里，Message的添加就完成了，是什么时候反馈消息的？？？什么时候做接收的？？
 
    回过头来看一下mQueue哪里来的？
 
@@ -193,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
    }
    ```
 
-5. `Looper.java`继续追踪一下`Looper.myLooper();`
+2. `Looper.java`继续追踪一下`Looper.myLooper();`
 
    ```java
    // sThreadLocal.get() will return null unless you've called prepare().
@@ -206,7 +238,7 @@ public class MainActivity extends AppCompatActivity {
    }
    ```
 
-6. `Looper.java中sThreadLocal.get();`那么主线程是在什么时候创建的呢?？这样我们做了有什么用？？？
+3. `Looper.java中sThreadLocal.get();`那么主线程是在什么时候创建的呢?？这样我们做了有什么用？？？
 
    先查一下：`sThreadLocal.set`
 
@@ -219,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
    }
    ```
 
-7. `Looper.java`中继续查看是谁调用了`prepare(boolean quitAllowed)`
+4. `Looper.java`中继续查看是谁调用了`prepare(boolean quitAllowed)` ，就可以知道什么时候创建了主线程Looper
 
    ```java
    // 这里应该是创建了一个主线程
@@ -234,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
    }
    ```
 
-8. 点击查询prepareMainLooper()谁调用了，发现是SystemServer.java 系统服务调用了
+5. 点击查询prepareMainLooper()谁调用了，发现是SystemServer.java 系统服务调用了
 
    `SystemServer.java` 这个是android系统的启动类，如果要详细了解看[app启动流程](1. applicationStart.md)
 
@@ -260,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
    }
    ```
 
-9. 到上面已经理清楚了， 线程被Looper所维护，而Handle维护着`MessageQueue`消息队列和`Looper`。
+6. 到上面已经理清楚了， 线程被Looper所维护，而Handle维护着`MessageQueue`消息队列和`Looper`。
 
    我们进入 `Looper.loop();`看一下里面做了什么
 
@@ -279,6 +311,7 @@ public class MainActivity extends AppCompatActivity {
                return;
            }
            try {
+               // 注意这里
                msg.target.dispatchMessage(msg);
                dispatchEnd = needEndTime ? SystemClock.uptimeMillis() : 0;
            } finally {
@@ -291,82 +324,88 @@ public class MainActivity extends AppCompatActivity {
 
    这里target是什么？？？回去看第3步，是handler
 
-   
+##### 总结
 
-10. 看一下`msg.target.dispatchMessage(msg);`也就是handler.java 的dispatchMessage方法。
+获取到主线程的Looper，里面维护着MassageQueue，和ThreadLocal
 
-   ```java
-   /**
-   * Handle system messages here.
-   */
-   public void dispatchMessage(Message msg) {
-       if (msg.callback != null) {
-           handleCallback(msg);
-       } else {
-           if (mCallback != null) {
-               if (mCallback.handleMessage(msg)) {
-                   return;
-               }
-           }
-           handleMessage(msg);
-       }
-   }
-   ```
+```java
+myLooper = Looper.prepare();
+// 激发ThreadLocal.get(),获取到当前线程的Looper
+// 主线的Looper在SystemServer.java ，已经被设置
+mQueue = mLooper.mQueue;
+// 获取到主线中的MessageQueue
+```
 
-   这里出现了三种回调方式，这里也是代表着我们配合handler可以采用不同的方式实现消息回调
+将获取到的主线的Looper 和 MessageQueue设置为成员变量
 
-   **本项目中是使用的是第3种，重写了父类的方法**
-
-   -  handleCallback(msg)：设置回调对象
-
-     ```java
-     private static void handleCallback(Message message) {
-         message.callback.run();
-     }
-     ```
-
-   - mCallback.handleMessage(msg)： 实现回调接口
-
-     ```java
-     public interface Callback {
-         public boolean handleMessage(Message msg);
-     }
-     ```
-
-   - handleMessage(msg)：复写父类方法
-
-     ```java
-     /**
-     * Subclasses must implement this to receive messages.
-     */
-     public void handleMessage(Message msg) {
-     }
-     ```
-
-     
+可以发现这里的MessageQueue，就被子线中利用了。
 
 
 
+##### 回调
+
+1. 看一下`msg.target.dispatchMessage(msg);`也就是handler.java 的dispatchMessage方法。
+
+  ```java
+  /**
+  * Handle system messages here.
+  */
+  public void dispatchMessage(Message msg) {
+      if (msg.callback != null) {
+          handleCallback(msg);
+      } else {
+          if (mCallback != null) {
+              if (mCallback.handleMessage(msg)) {
+                  return;
+              }
+          }
+          handleMessage(msg);
+      }
+  }
+  ```
+
+  这里出现了三种回调方式，这里也是代表着我们配合handler可以采用不同的方式实现消息回调
+
+  **本项目中是使用的是第3种，重写了父类的方法**
+
+  -  handleCallback(msg)：设置回调对象
+
+    ```java
+    private static void handleCallback(Message message) {
+        message.callback.run();
+    }
+    ```
+
+  - mCallback.handleMessage(msg)： 实现回调接口
+
+    ```java
+    public interface Callback {
+        public boolean handleMessage(Message msg);
+    }
+    ```
+
+  - handleMessage(msg)：复写父类方法
+
+    ```java
+    /**
+    * Subclasses must implement this to receive messages.
+    */
+    public void handleMessage(Message msg) {
+    }
+    ```
 
 
-### handler的使用
 
 
-
-
-
-### 总结
+### 综合总结
 
 <img src="https://www.crabglory.club/img/post/android/mind/handler.png " width="600px" >
 
 
 
-- 在Handler类中维护了两个东西，一个是消息队列，另外一个是ThreadLocal，这个是由map构成的，用来绑定当前线程与looper
+从子线中发消息handler.sendMessage(message)，消息通过**成员变量MessageQueue**(同步队列)按时间插入，且每个消息封装了当前的Handler
 
-- 我们创建了一个handler对象用来发消息，肯定要有消息接收的地方，也就是说我们要设置一个消息回调的地方，有三种方法，看前面的内容。
-
-- 我们要把消息发给对应的接收消息的地方，这里我们首先消息与handle的绑定
-- 同时我们拿到我们开始创建handler的线程的looper ，这里要说的是，一开始handler被创建的时候，当前的线程已经绑定looper，这样我们就可以拿到msg，并将消息分发。
+成员变量MessageQueue在handler创建的时候，通过调用**Looper.prepare()**获取，其中Looper.prepare()通过**ThreadLocal**获取到主线程的looper，再通过Looper获取到MessageQueue
 
 
 
