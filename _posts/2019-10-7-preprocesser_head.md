@@ -1,11 +1,10 @@
-
 ---
 layout:     post                    # 使用的布局（不需要改）
 title:      预处理器与头文件                  # 标题 
 subtitle:   实例与原则           #副标题
 date:       2019-10-07              # 时间
 author:     kevin-leak                      # 作者
-header-img: img/post/c_c++/bg-2019-06.jpg    #这篇文章标题背景图片
+header-img: img/post/c_c++/bg-2019-10-07.jpg    #这篇文章标题背景图片
 catalog: true                       # 是否归档
 tags:                               #标签
     - c
