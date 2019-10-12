@@ -55,7 +55,7 @@ pr value is : 0x61ff04  p address is : 0x61ff00
 
 引用就是一个别名，有点类似于宏定义，一个变量名字的取代而已
 
-<img src="https://www.crabglory.club/mind/reference_point.png" height="300px"/>
+<img src="https://www.crabglory.club/img/post/c_c++/mind/reference_point.png" height="300px"/>
 
 命名空间
 --------
