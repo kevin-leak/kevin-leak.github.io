@@ -228,6 +228,8 @@ char * const：修饰指针
 char const * const：同时修饰值和指针
 ```
 
+<span style="background-color: #E2F0FF; padding: 0px 3px; margin:2px; border-radius:3px ">只要const在*前面，那么指针就不可以变化，值可以变</span> 
+
 #### 实验
 
 - `const char *`
